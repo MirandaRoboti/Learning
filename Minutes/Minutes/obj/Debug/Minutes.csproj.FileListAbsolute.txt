@@ -1,0 +1,6 @@
+C:\Users\rompotmx\Desktop\InheritanceDemo\Minutes\Minutes\bin\Debug\Minutes.exe.config
+C:\Users\rompotmx\Desktop\InheritanceDemo\Minutes\Minutes\bin\Debug\Minutes.exe
+C:\Users\rompotmx\Desktop\InheritanceDemo\Minutes\Minutes\bin\Debug\Minutes.pdb
+C:\Users\rompotmx\Desktop\InheritanceDemo\Minutes\Minutes\obj\Debug\Minutes.csproj.CoreCompileInputs.cache
+C:\Users\rompotmx\Desktop\InheritanceDemo\Minutes\Minutes\obj\Debug\Minutes.exe
+C:\Users\rompotmx\Desktop\InheritanceDemo\Minutes\Minutes\obj\Debug\Minutes.pdb

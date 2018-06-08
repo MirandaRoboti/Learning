@@ -1,0 +1,11 @@
+C:\Users\rompotmx\Desktop\InheritanceDemo\CelciusToFarenheit\CelciusToFarenheit\bin\Debug\netcoreapp2.0\CelciusToFarenheit.deps.json
+C:\Users\rompotmx\Desktop\InheritanceDemo\CelciusToFarenheit\CelciusToFarenheit\bin\Debug\netcoreapp2.0\CelciusToFarenheit.runtimeconfig.json
+C:\Users\rompotmx\Desktop\InheritanceDemo\CelciusToFarenheit\CelciusToFarenheit\bin\Debug\netcoreapp2.0\CelciusToFarenheit.runtimeconfig.dev.json
+C:\Users\rompotmx\Desktop\InheritanceDemo\CelciusToFarenheit\CelciusToFarenheit\bin\Debug\netcoreapp2.0\CelciusToFarenheit.dll
+C:\Users\rompotmx\Desktop\InheritanceDemo\CelciusToFarenheit\CelciusToFarenheit\bin\Debug\netcoreapp2.0\CelciusToFarenheit.pdb
+C:\Users\rompotmx\Desktop\InheritanceDemo\CelciusToFarenheit\CelciusToFarenheit\obj\Debug\netcoreapp2.0\CelciusToFarenheit.csprojResolveAssemblyReference.cache
+C:\Users\rompotmx\Desktop\InheritanceDemo\CelciusToFarenheit\CelciusToFarenheit\obj\Debug\netcoreapp2.0\CelciusToFarenheit.csproj.CoreCompileInputs.cache
+C:\Users\rompotmx\Desktop\InheritanceDemo\CelciusToFarenheit\CelciusToFarenheit\obj\Debug\netcoreapp2.0\CelciusToFarenheit.AssemblyInfoInputs.cache
+C:\Users\rompotmx\Desktop\InheritanceDemo\CelciusToFarenheit\CelciusToFarenheit\obj\Debug\netcoreapp2.0\CelciusToFarenheit.AssemblyInfo.cs
+C:\Users\rompotmx\Desktop\InheritanceDemo\CelciusToFarenheit\CelciusToFarenheit\obj\Debug\netcoreapp2.0\CelciusToFarenheit.dll
+C:\Users\rompotmx\Desktop\InheritanceDemo\CelciusToFarenheit\CelciusToFarenheit\obj\Debug\netcoreapp2.0\CelciusToFarenheit.pdb

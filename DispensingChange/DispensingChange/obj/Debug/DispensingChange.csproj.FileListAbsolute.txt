@@ -1,0 +1,7 @@
+C:\Users\rompotmx\Desktop\InheritanceDemo\DispensingChange\DispensingChange\bin\Debug\DispensingChange.exe.config
+C:\Users\rompotmx\Desktop\InheritanceDemo\DispensingChange\DispensingChange\bin\Debug\DispensingChange.exe
+C:\Users\rompotmx\Desktop\InheritanceDemo\DispensingChange\DispensingChange\bin\Debug\DispensingChange.pdb
+C:\Users\rompotmx\Desktop\InheritanceDemo\DispensingChange\DispensingChange\obj\Debug\DispensingChange.csproj.CoreCompileInputs.cache
+C:\Users\rompotmx\Desktop\InheritanceDemo\DispensingChange\DispensingChange\obj\Debug\DispensingChange.exe
+C:\Users\rompotmx\Desktop\InheritanceDemo\DispensingChange\DispensingChange\obj\Debug\DispensingChange.pdb
+C:\Users\rompotmx\Desktop\InheritanceDemo\DispensingChange\DispensingChange\obj\Debug\DispensingChange.csprojResolveAssemblyReference.cache

@@ -1,30 +1,27 @@
-    using System;
-    using System.Collections.Generic;
-    using Xunit;
+using ForLoops.Model;
+using System;
+using System.Collections.Generic;
+using Xunit;
 
     namespace ForLoopsTest
     {
-        /*
-         * need to test that there is an array of number
-         * That this array is not null
-         * That it will return the biggest number
-        */
-        public class UserInput
+    /*
+     * need to test that there is an array of number
+     * That this array is not null
+     * That it will return the biggest number
+    */
+    public class TestUserInput
+    {
+        [Fact]
+        public void Should_Return_Largest()
         {
-            [Fact]
-                public void ShoudlReturnTheLargestNumber_FromTheGivenArray()
-            {
-                List<string> numbersInput = new List<string>
-                {
-                    "1,2,3,4,5,6,7,8,9,10"
-                };
+            var numbers = new List<int>() { 1, 3, 2,5,10 };
 
-
-                Assert.NotNull(numbersInput);
-
-
-            }
+            UserInput userInput = new UserInput();
+            var returnMax = userInput.MaxNumber(numbers);
+            Assert.Equal(10, returnMax);
         }
+    }
 
       
     }

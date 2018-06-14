@@ -1,0 +1,160 @@
+pipeline {
+	environment {
+		DOTNET_CLI_TELEMETRY_OPTOUT=1
+		DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+	}
+
+	agent {
+		label 'jenkins-dotnet-slave'
+	}
+	
+	//triggers {
+	//    pollSCM('* * * * *') // poll for updates every minute
+	//}
+
+	stages {
+		stage("SCM") {
+			steps {
+				git credentialsId: 'gitcredentials', url: 'https://tfs-glo-lexisadvance.visualstudio.com/DefaultCollection/UK/_git/PScore.Service'
+			}
+		}
+
+		stage ('Build artifacts') {
+			parallel {
+			
+				//Publish the artifacts to a folder, will reuse these so we're not rebuilding the artifacts at every stage
+				stage('Build app') {
+					steps {
+						retry(3) {
+							sh 'dotnet publish ./PScore.Service/PScore.Service.csproj -c Release -r win10-x64 -o /tmp/app'
+						}
+					}
+				}
+
+				//Publish the artifacts to a folder, will reuse these so we're not rebuilding the artifacts at every stage
+				stage('Build tests') {
+					steps {
+						retry(3) {
+							sh 'dotnet publish ./PScore.Service.Tests/PScore.Service.Tests.csproj -c Release -r win10-x64 -o /tmp/tests'
+						}
+					}
+				}
+			}
+		}
+
+		stage('Testing and Security') {
+			parallel {
+				//Run the tests using the artifacts we built earlier. Notice the --no-build option
+				stage('Unit test') {
+					steps {
+						sh 'dotnet test ./PScore.Service.Tests/PScore.Service.Tests.csproj -c Release -r win10-x64 -o /tmp/tests --filter Category=UnitTest --no-build -l "trx;LogFileName=tmp/unit-test-report/PScore.Service.unittest.trx" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover' 
+					}
+				}
+
+				stage('Dependency Check') {
+					steps {
+						retry(3) {
+							dependencyCheckAnalyzer datadir: '', 
+								hintsFile: '', 
+								includeCsvReports: true, 
+								includeHtmlReports: true, 
+								includeJsonReports: true, 
+								includeVulnReports: true, 
+								isAutoupdateDisabled: false, 
+								outdir: '', 
+								scanpath: "${WORKSPACE}/PScore.Service", 
+								skipOnScmChange: false, 
+								skipOnUpstreamChange: false, 
+								suppressionFile: '', 
+								zipExtensions: ''
+							   
+							dependencyCheckPublisher canComputeNew: false, 
+								defaultEncoding: '', 
+								healthy: '', 
+								pattern: '', 
+								unHealthy: ''
+						}
+					}
+				}
+			}
+		}
+
+		//Run the tests using the artifacts we built earlier. Notice the --no-build option
+		stage('Integration test') {
+			steps {
+				sh 'dotnet test ./PScore.Service.Tests/PScore.Service.Tests.csproj -c Release -r win10-x64 -o /tmp/tests --filter "Category=IntegrationTest&Category!=SmokeTest" --no-build -l "trx;LogFileName=tmp/integration-test-report/PScore.Service.integrationtest.trx"' 
+			}
+		}
+
+		//stage ('Archiving artifacts') {
+		//	steps {
+		//		zip(zipFile: "srt-win10-x64-${env.BUILD_NUMBER}.zip", archive: true, dir: '/tmp/app')
+		//		zip(zipFile: "srt-win10-x64-${env.BUILD_NUMBER}.tests.zip", archive: true, glob: '**/*.trx', dir: "${WORKSPACE}/PScore.Service/PScore.Service.Tests/")
+		//		zip(zipFile: "srt-win10-x64-${env.BUILD_NUMBER}.coverage.zip", archive: true, glob: '**/coverage.xml', dir: "${WORKSPACE}/PScore.Service/PScore.Service.Tests/")
+		//	}
+		//}
+
+		//stage ('Upload to S3') {
+		//	steps {
+		//		withCredentials([usernamePassword(credentialsId: aws-ecr-access-key-id, uernameVariable: 'username', passwordVariable: 'password'),
+		//		withCredentials([usernamePassword(credentialsId: aws-ecr-secret-access-key, usernameVariable: 'username', passwordVariable: 'password')])
+		//		{
+		//			s3Upload(file: "srt-win10-x64-${env.BUILD_NUMBER}.zip", bucket:'ln-sandbox-pscore-servicetest', path: '')
+		//		}
+		//	}
+		//}
+		
+		stage("Sonar Scanner") {
+			steps {
+				script {
+					def scannerHome = tool 'sonarqube-scanner-msbuild'
+					withSonarQubeEnv('sonarqube-sandbox') {
+						sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll begin /v:1.0 /d:sonar.analysis.mode=publish /d:sonar.cs.opencover.reportsPaths=\"${WORKSPACE}/**/coverage.xml\" /d:sonar.coverage.exclusions=\"**/PScore.Service.Tests/*,**/*Tests.cs,**/SelfTest.cs,**/PScore.Service.Tests/Helper/*.cs,**/Helper/*\" /d:sonar.cs.vstest.reportsPaths=\"${WORKSPACE}/**/*.trx\" /d:sonar.dependencyCheck.reportPath=\"${WORKSPACE}/dependency-check-report.xml\" /d:sonar.dependencyCheck.htmlReportPath=\"${WORKSPACE}/dependency-check-report.html\" /d:sonar.verbose=false /d:sonar.login=${SONAR_AUTH_TOKEN} /n:PScore.Service /k:PScore.Service"
+						sh "dotnet build PScore.Service/PScore.Service.sln"
+						sh "dotnet ${scannerHome}/SonarScanner.MSBuild.dll end /d:sonar.login=${SONAR_AUTH_TOKEN}"
+					}
+							
+					//node ('jenkins-python3-slave') {
+					//	git 'https://github.com/cwebbtw/sonarqube-exporter.git'
+					//            
+					//	sh 'pip3 install --user -r requirements.txt'
+				
+					//	withCredentials([usernamePassword(credentialsId: 'influxcredentials', usernameVariable: 'username', passwordVariable: 'password')]) {
+					//		withSonarQubeEnv('sonarqube-sandbox') {
+					//			withEnv([
+					//				"SONAR_USER=$SONAR_AUTH_TOKEN",
+					//				"SONAR_BASE_URL=http://sonarqube-sonarqube.sonarqube:9000",
+					//				"INFLUX_URL=influxdb-influxdb.influxdb",
+					//				"INFLUX_USER=$username",
+					//				"INFLUX_PASSWORD=$password",
+					//				"INFLUX_DB=sonar"]) {
+					 //                           
+					//				sh 'python3 sonar-client.py'
+					//			}
+					//		}
+					//	}
+					//}
+				}
+			}
+		}
+	}
+	//post {
+	//	always {
+	//		script {
+	//			currentBuild.result = currentBuild.currentResult
+	//			def customDataMap = getCustomDataMap()
+	//			withSonarQubeEnv('sonarqube-sandbox') {
+	//				step([$class: 'InfluxDbPublisher', customDataMap: customDataMap, customPrefix: env.JOB_NAME])
+	//			}
+	//		}
+	//	}
+	//}
+}
+
+
+def getCustomDataMap() {
+	def response = httpRequest "http://jenkinssearchrelevance:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}/wfapi"
+	def json = new groovy.json.JsonSlurper().parseText(response.content)
+	def map = json.stages.collectEntries { [it.name, it.durationMillis] }
+	return ["stages":map]
+}

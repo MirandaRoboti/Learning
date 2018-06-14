@@ -1,0 +1,159 @@
+#!groovy
+
+def retsAmi = 'ami-39247b43' // RETS CentOS 7 (x86_64) Q1/2018 v1.0 AMI - see https://wiki.regn.net/wiki/RETS_AMIs
+def ami = 'unknown'
+
+pipeline {
+  agent {
+    label 'EPHLinuxNode'
+  }
+
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '30', daysToKeepStr: '7'))
+  }
+
+  environment {
+    AUTH = credentials('jenkins-oauth') // credentials for accessing VSTS
+    AUTH_PACKER = credentials('PackerSimple') // credentials for packer to use to access AWS to build AMI
+  }
+
+  triggers {
+    pollSCM('* * * * *') // poll for updates every minute
+  }
+
+  stages {
+    stage('Explicit restore packages') {
+      steps {
+        sh 'dotnet restore'
+      }
+    }
+
+    stage('Build and publish project') {
+      steps {
+        retry(3) {
+          sh 'dotnet build'
+          sh 'dotnet publish -c release -f netcoreapp2.0'
+        }
+      }
+    }
+
+    stage('Unit test') {
+      steps {
+        dir ('PScore.Service.Test') {
+          sh "sed -i 's/RuntimeFrameworkVersion>2.0.5/RuntimeFrameworkVersion>2.0.3/' PScore.Service.Test.csproj"
+          sh 'dotnet test'
+        }
+      }
+    }
+
+    stage('Integration test') {
+      steps {
+        dir ('PScore.Service.Integration') {
+          sh "sed -i 's/RuntimeFrameworkVersion>2.0.5/RuntimeFrameworkVersion>2.0.3/' PScore.Service.Integration.csproj"
+          sh 'dotnet test'
+        }
+      }
+    }
+
+    stage ('Artifactory Publish') {
+      // package up the application and publish into artifactory - the build of the AMI will subsequently retrieve this
+      steps {
+        zip zipFile : "PScore.Service_${env.BUILD_NUMBER}.zip", dir : './PScore.Service/bin/Release/netcoreapp2.0/publish'
+        script {
+          def majorVersion = sh (script: 'grep -oP "(?<=<MajorVersion>).*(?=</MajorVersion>)" ./PScore.Service/PScore.Service.csproj', returnStdout: true).trim()
+          def minorVersion = sh (script: 'grep -oP "(?<=<MinorVersion>).*(?=</MinorVersion>)" ./PScore.Service/PScore.Service.csproj', returnStdout: true).trim()
+
+          def gitHash = sh (script: 'git rev-parse HEAD', returnStdout: true).trim()
+
+          def server = Artifactory.server 'opscert-artifactory'
+          def buildInfo = server.upload("""{
+            "files" : [
+            {
+              "pattern" : "PScore.Service_*.zip",
+              "target" : "gen-release-local/Apps/PScore.Service/",
+              "props" : "gitURL=${env.GIT_URL};gitCommit=${gitHash};Version=${majorVersion}.${minorVersion}.${env.BUILD_NUMBER};jenkinsBuildNumber=${env.BUILD_NUMBER};projectName=PScore.Service"
+            }
+            ]
+          }""")
+          buildInfo.retention maxBuilds: 10, deleteBuildArtifacts: true
+          buildInfo.name = "PScore.Service"
+          server.publishBuildInfo(buildInfo)
+        }
+      }
+    }
+
+    stage ('Bake AMI') {
+      agent {
+        label 'ansible2.3.2'
+      }
+			steps {
+        script {
+          def majorVersion = sh (script: 'grep -oP "(?<=<MajorVersion>).*(?=</MajorVersion>)" ./PScore.Service/PScore.Service.csproj', returnStdout: true).trim()
+          def minorVersion = sh (script: 'grep -oP "(?<=<MinorVersion>).*(?=</MinorVersion>)" ./PScore.Service/PScore.Service.csproj', returnStdout: true).trim()
+
+          def gitHash = sh (script: 'git rev-parse HEAD', returnStdout: true).trim()
+
+  				dir('ansible') {
+            // credentials for ansible vault (used to encrypt build time secrets)
+            withCredentials([file(credentialsId: 'microservice_ansible_vault_password_file', variable: 'ANSIBLE_VAULT_PASSWORD_FILE')]) {
+              // the core-config script clones ansible repos provided by the US DevTools teams in order to provide access to shared roles
+              sh "chmod +x ./core-config.sh"
+              sh "./core-config.sh config master master ${AUTH_PSW}"
+
+              // verify that the build looks good as running packer takes a while
+              sh "ansible --version"
+              sh "ansible-playbook --vault-password-file '${ANSIBLE_VAULT_PASSWORD_FILE}' --check PScore.Service.yaml"
+              sh "/opt/packer/packer validate --var-file PScore.Service.var --var \"aws_key=${AUTH_PACKER_USR}\" --var \"aws_secret=${AUTH_PACKER_PSW}\" --var \"base_ami=${retsAmi}\" --var \"bake_date=${env.BUILD_TIMESTAMP}\" --var \"commit_id=${gitHash}\" --var \"artifact=${majorVersion}.${minorVersion}.${env.BUILD_NUMBER}\" --var \"vault_password_file=${ANSIBLE_VAULT_PASSWORD_FILE}\" PScore.Service.packer"
+
+              // run bundler to install serverspec
+              sh "bundle install"
+
+              // run packer - making sure that any error causes the build to fail
+              sh """#!/bin/bash -l
+              set -o pipefail
+              /opt/packer/packer build --var-file PScore.Service.var --var \"aws_key=${AUTH_PACKER_USR}\" --var \"aws_secret=${AUTH_PACKER_PSW}\" --var \"base_ami=${retsAmi}\" --var \"bake_date=${env.BUILD_TIMESTAMP}\" --var \"commit_id=${gitHash}\" --var \"artifact=${majorVersion}.${minorVersion}.${env.BUILD_NUMBER}\" --var \"buildNumber=${env.BUILD_NUMBER}\" -color=false --var \"vault_password_file=${ANSIBLE_VAULT_PASSWORD_FILE}\" PScore.Service.packer | tee build.log
+              """
+              // extract the identity of the AMI that has been created: this will be used in subsequent steps to deploy the AMI
+              ami = sh (script: 'tail -2 build.log | sed -n \'s/.*\\(ami-.*\\)/\\1/p\'', returnStdout: true).trim()
+            }
+          }
+				}
+			}
+      post {
+        always {
+          // report serverspec results
+          junit allowEmptyResults: true, testResults: 'ansible/reports/rspec.xml'
+        }
+      }
+		}
+
+    stage ('Tag build') {
+      agent {
+        label 'ansible2.3.2'
+      }
+      steps {
+        script {
+          def gitUrl = sh(returnStdout: true, script: 'git config remote.origin.url').trim()
+          def gitUrlAfterHttps = gitUrl.substring('https://'.length())
+          def gitUrlWithAuth = "https://${AUTH_PSW}@${gitUrlAfterHttps}"
+          sh "git tag -a '${env.JOB_BASE_NAME}#${env.BUILD_NUMBER}/${ami}' -m 'Job ${env.JOB_BASE_NAME}#${env.BUILD_NUMBER} built AMI ${ami}'"
+          sh "git push ${gitUrlWithAuth} --tags"
+        }
+      }
+    }
+
+    stage ('Deploy to Dev') {
+      steps {
+        build job: 'PScore.Service-DeployToDev', parameters: [
+          run(name: 'buildToDeploy', runId: "${env.JOB_NAME}#${env.BUILD_NUMBER}")
+        ], wait: false
+      }
+    }
+  }
+
+  post {
+    always {
+      deleteDir()
+    }
+  }
+}

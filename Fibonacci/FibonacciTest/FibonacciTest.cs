@@ -13,13 +13,9 @@ using Xunit;
     public class TestUserInput
     {
         [Fact]
-        public void Should_Return_Largest()
+        public void Should_Return_UpTo377()
         {
-            var numbers = new List<int>() { 1, 3, 2,5,10 };
-
-            UserInput userInput = new UserInput();
-            var returnMax = userInput.MaxNumber(numbers);
-            Assert.Equal(10, returnMax);
+            Program Fib = new Program();
         }
     }
 

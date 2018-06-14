@@ -2,7 +2,7 @@
 
 namespace Fibonacci
 {
-    class Program
+    public class Program
     {
         public static int Fib(int n)
         {

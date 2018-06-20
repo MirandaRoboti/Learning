@@ -42,11 +42,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Game.cs" />
+    <Compile Include="Participants\ComputerPlayer.cs" />
+    <Compile Include="Enums\Options.cs" />
+    <Compile Include="Participants\HumanPlayer.cs" />
+    <Compile Include="Partictipant.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Rock_Paper_Scissors.Test\Rock_Paper_Scissors.Test.csproj">
+      <Project>{00e1126c-d2cd-4869-812f-77a53ced0993}</Project>
+      <Name>Rock_Paper_Scissors.Test</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

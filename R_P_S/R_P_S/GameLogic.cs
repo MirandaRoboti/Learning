@@ -87,6 +87,7 @@ namespace R_P_S
             }
 
             Console.ReadLine();
+            Console.WriteLine("Do you want to continue playing? y for Yes, n for No");
         }
 
     }

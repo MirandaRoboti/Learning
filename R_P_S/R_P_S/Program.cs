@@ -10,13 +10,22 @@ namespace R_P_S
     {
        public static void Main(string[] args)
         {
-            
+            bool shouldContinue = false;
+
+            do
+            {
                 Console.WriteLine("Do you choose rock,paper or scissors");
                 GameLogic gameLogic = new GameLogic();
                 string userChoise = Console.ReadLine();
                 gameLogic.Game(userChoise);
 
-           
+                if (Console.ReadLine() == "y")
+                {
+                    shouldContinue = true;
+                }
+            }
+            while (shouldContinue);
+
         }
     }
 }

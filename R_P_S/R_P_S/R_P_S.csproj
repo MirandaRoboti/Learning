@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{20C1A31A-C42B-47A1-866F-7D0E6402BC78}</ProjectGuid>
+    <ProjectGuid>{2B0F732B-0485-4EC2-875F-9BE85528955E}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Rock_Paper_Scissoros</RootNamespace>
-    <AssemblyName>Rock_Paper_Scissoros</AssemblyName>
+    <RootNamespace>R_P_S</RootNamespace>
+    <AssemblyName>R_P_S</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -42,22 +42,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Game.cs" />
-    <Compile Include="Participants\ComputerPlayer.cs" />
-    <Compile Include="Enums\Options.cs" />
-    <Compile Include="Participants\HumanPlayer.cs" />
-    <Compile Include="Partictipant.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Rock_Paper_Scissors.Test\Rock_Paper_Scissors.Test.csproj">
-      <Project>{00e1126c-d2cd-4869-812f-77a53ced0993}</Project>
-      <Name>Rock_Paper_Scissors.Test</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -12,8 +12,8 @@ namespace ForLoops
     {
         static void Main(string[] args)
         {
-
  
         }
+
     }
 }

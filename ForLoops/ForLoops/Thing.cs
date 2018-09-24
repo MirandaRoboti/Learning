@@ -15,7 +15,7 @@ namespace ForLoops
 
         public int Value { get; }
 
-        public Thing ChildThing { get; set; }
+        //public Thing ChildThing { get; set; }
 
         public List<Thing> ChildThings { get; set; }
 

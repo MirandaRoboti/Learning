@@ -91,7 +91,7 @@ namespace ForLoopsTest
         {
             var thingList = new Thing("beans", 4)
             {
-                ChildThing = new Thing("eggs", 1)
+                ChildThings = new List<Thing> { new Thing("eggs", 1) }
             };
 
             var stringArray = thingList.Flattern().Select(x => x.ToString());
@@ -116,10 +116,10 @@ namespace ForLoopsTest
         {
             var thingList = new Thing("beans", 4)
             {
-                ChildThing = new Thing("eggs", 1)
+                ChildThings = new List<Thing>{ new Thing("eggs", 1)
                 {
-                    ChildThing = new Thing("Crap", 999999)
-                }
+                    ChildThings = new List<Thing> { new Thing("Crap", 999999) }
+                } }
             };
 
             var stringArray = thingList.Flattern().Select(x => x.ToString());
@@ -133,10 +133,10 @@ namespace ForLoopsTest
         {
             var thingList = new Thing("beans", 4)
             {
-                ChildThing = new Thing("eggs", 1)
+                ChildThings = new List<Thing>{new Thing("eggs", 1)
                 {
-                    ChildThing = new Thing("Crap", 999999)
-                }
+                    ChildThings = new List<Thing> { new Thing("Crap", 999999) }
+                } }
             };
 
 
@@ -155,13 +155,14 @@ namespace ForLoopsTest
         {
             var thingList = new Thing("beans", 4)
             {
-                ChildThing = new Thing("eggs", 1)
+                ChildThings = new List<Thing>{new Thing("eggs", 1)
                 {
-                    ChildThing = new Thing("Crap", 999999)
-                }
+                    ChildThings = new List<Thing>{new Thing("Crap", 999999) }
+                } }
             };
 
-            var result = StringManipulation.Flattern(thingList).OrderByValueAsc();
+            var flat = StringManipulation.Flattern(thingList);
+            var result = flat.OrderByValueAsc();
 
             result[0].Name.Should().Be("eggs");
             result[0].Value.Should().Be(1);
@@ -182,7 +183,8 @@ namespace ForLoopsTest
                 } }
             } };
 
-            var flat = StringManipulation.FlatternForChildThings(thingList);
+
+            var flat = StringManipulation.Flattern(thingList);
             var result = flat.OrderByValueAsc();
 
             result[0].Name.Should().Be("eggs");
@@ -193,14 +195,41 @@ namespace ForLoopsTest
             result[2].Value.Should().Be(999999);
         }
 
-        //[Fact]
-        //public void ShouldOrderAndFlatternChildren()
-        //{
-        //    var thingList = StringManipulation.GetTestThing;
+        [Fact]
+        public void ShouldOrderAndFlatternChildren()
+        {
+            var thingList = new List<Thing>
+                {
+                    new Thing("Egg", 4),
+                    new Thing("Cheese", 1)
+                    {
+                       ChildThings = new List<Thing>
+                           {
+                               new Thing("Beans", 200),
+                               new Thing("Toast", 100),
+                               new Thing("Sofa", 999)
+                            }
+                    },
+                    new Thing("Doobell", 87)
+                    {
+                        ChildThings = new List<Thing>
+                        {
+                            new Thing("Miranda", 55),
+                            new Thing("Chair", 12)
+                        {
+                           ChildThings =new List<Thing>
+                            {
+                                new Thing("Henry", 6)
+                            }
+                        }
+                   }
+                }
+            };
 
+            var stringArray = thingList.Flattern().Select(x => x.ToString());
+            var result = string.Join(",", stringArray);
 
-
-        //    Assert.Equal(result, "Cheese[1],Eggs[4],Henry[6],Chair[12],Miranda[55],Doobell[87],Toast[100],Beans[200],Sofa[999]");
-        //}
+            Assert.Equal(result, "Cheese[1],Eggs[4],Henry[6],Chair[12],Miranda[55],Doobell[87],Toast[100],Beans[200],Sofa[999]");
+        }
     }
 }

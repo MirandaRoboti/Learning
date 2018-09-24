@@ -25,70 +25,31 @@ namespace ForLoops
         {
             things.Add(thing);
 
-            if (thing.ChildThing == null)
-            {
-                return things;
-            }
+           if (thing.ChildThings?.FirstOrDefault() == null)
+           {
+               return things;
+           }
 
-            return Flattern(thing.ChildThing, things);
+           return Flattern(thing.ChildThings?.FirstOrDefault(), things);
+            
         }
 
-
-        public static List<Thing> FlatternForChildThings(this List<Thing> things)
+        public static List<Thing> Flattern(this List<Thing> thingList)
         {
-            return FlatternForChildThings(things, new List<Thing>());
-        }
-
-        private static List<Thing> FlatternForChildThings(List<Thing> things, List<Thing> flattenThings)
-        {
-            foreach (var thing in things)
+            foreach (var child in thingList)
             {
-                //return FlatternForChildThings(thing.Flattern(), flattenThings);
-                if (thing.ChildThings != null)
+                if (child.ChildThings?.Count() > 0)
                 {
-                    return FlatternForChildThings(thing.ChildThings, flattenThings);
+                    foreach (var childOfChild in child.ChildThings)
+                    {
+                        Flattern(childOfChild, thingList);
+                    }
                 }
+                return thingList;
             }
+            return Flattern(thingList);
 
-            return FlatternForChildThings(flattenThings);
-           
         }
-
-
-
-        //public static List<Thing> GetTestThing
-        //{
-        //    get
-        //    {
-        //        return new List<Thing>
-        //        {
-        //            new Thing("Egg", 4),
-        //            new Thing("Cheese", 1)
-        //            {
-        //               ChildThings = new List<Thing>
-        //                    {
-        //                       new Thing("Beans", 200),
-        //                       new Thing("Toast", 100),
-        //                       new Thing("Sofa", 999)
-        //                    }
-        //            },
-        //            new Thing("Doobell", 87)
-        //            {
-        //                ChildThings = new List<Thing>
-        //                {
-        //                    new Thing("Miranda", 55),
-        //                    new Thing("Chair", 12)
-        //                {
-        //                    ChildThings =new List<Thing>
-        //                    {
-        //                        new Thing("Henry", 6)
-        //                    }
-        //                }
-        //           }
-        //        }
-        //    };
-        //    }
-        //}
     }
 }
 
